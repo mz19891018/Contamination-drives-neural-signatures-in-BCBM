@@ -1,0 +1,5 @@
+suppressPackageStartupMessages(library(BayesPrism))
+cat("SLOTNAMES:\n")
+print(slotNames("BayesPrism"))
+cat("\nRUNARGS:\n")
+print(args(BayesPrism::run))

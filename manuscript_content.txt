@@ -1,0 +1,287 @@
+# Neural-like transcriptional signal in bulk breast cancer brain metastasis is largely explained by adjacent normal brain tissue
+
+**Running title:** Contamination drives neural signatures in BCBM
+
+**Authors:** [Author list and affiliations to be confirmed at submission]
+
+---
+
+## Abstract
+
+**Background.** Bulk transcriptomic studies of breast cancer brain metastasis (BCBM) repeatedly report up-regulation of neuronal and glial genes in metastatic lesions, and interpret this as tumour-cell neural reprogramming. Because brain metastases are resected together with adjacent brain parenchyma, an alternative and more parsimonious explanation is normal-tissue admixture.
+
+**Methods.** We analysed paired primary–brain-metastasis bulk transcriptomes (GSE184869; 69 brain metastases, 21 primaries, 21 true pairs), a BCBM single-nucleus reference (GSE324453; 56,268 nuclei, 12 cell types), a breast single-cell atlas (GSE176078; 100,064 cells, 26 patients), and three independent BCBM cohorts. Rather than relying on global deconvolution estimates, we computed, for each differentially expressed gene, the rank correlation between its expression and the deconvolution-derived brain-cell content within brain-metastasis samples only, and classified genes accordingly. We tested this classification against batch structure, reference-set composition, baseline expression, and marker-gene circularity.
+
+**Results.** Of 1,254 genes tested, 120 were contamination-driven (rho > 0.6, FDR < 0.05) and 973 were tumour-intrinsic candidates (|rho| < 0.3). The contamination-driven set contained the canonical "neural reprogramming" genes, including ATP1A2 (rho = 0.75) and TUBB4A (rho = 0.74). Notably, the single most up-regulated gene in the paired comparison, C1QL1 (log2FC = 5.15), was itself contamination-driven (rho = 0.72, FDR = 6 x 10^-9). The gene-level association replicated across three cohorts (pooled rho = 0.918, 95% CI 0.879-0.945, n = 100 brain metastases) and was not explained by batch (within-batch rho = 0.845 in the largest batch; batch-adjusted partial rho = 0.885), by the astrocyte reference class (Cohen's kappa = 0.754 after its removal; kappa = 0.700 with neuron-only brain content), or by a small number of marker genes (rho = 0.808 after removing 150 markers, versus a matched random-gene null of 0.129, empirical p = 0.001). Gene-wise correlation with contamination was inversely related to baseline expression in the primary tumour (r = -0.447, p = 1 x 10^-62), indicating that the widely used "de novo adaptation" category is structurally enriched for brain-restricted transcripts. The competence programme (n = 1,050), defined by high primary-tumour expression, was clean with respect to contamination (only 2 of 1,050 genes contamination-driven) but failed to predict brain metastasis in the expected direction across two independent BMFS cohorts (GSE2603 HR = 0.47/SD, p = 0.005 but opposite to hypothesis; GSE12276 HR = 1.24/SD, p = 0.38).
+
+**Conclusions.** The neural-like signal in bulk BCBM transcriptomes is largely attributable to adjacent normal brain rather than to tumour-cell reprogramming. Analytical designs that define metastasis-acquired programmes by low primary expression are particularly vulnerable to this artefact. The temporal-decomposition framework as a whole does not yield clinically actionable molecular classes from bulk data. We provide a per-gene contamination verdict table as a reusable resource.
+
+**Keywords.** breast cancer brain metastasis; tumour purity; deconvolution; transcriptomic artefact; neural reprogramming
+
+---
+
+## 1. Introduction
+
+Brain metastasis occurs in 10-30% of patients with metastatic breast cancer and remains largely untreatable. A recurring theme in the molecular literature is that tumour cells colonising the brain acquire neural or glial characteristics - variously termed neural mimicry, neural reprogramming, or neuronal differentiation - and that this adaptation is both a driver of colonisation and a therapeutic opportunity.
+
+Much of the supporting evidence comes from bulk transcriptomic comparisons of brain metastases with matched or unmatched primary breast tumours. Such comparisons consistently identify neuronal and glial transcripts among the most strongly up-regulated genes.
+
+There is, however, a structural problem with this evidence. Brain metastases are surgically resected with a margin of adjacent parenchyma, and the resulting specimen necessarily contains neurons, astrocytes and oligodendrocytes. Primary breast specimens contain none. Any differential expression analysis between the two compartments therefore confounds tumour-cell biology with tissue of origin. This is not a subtle effect: brain-restricted transcripts are absent from breast tissue, so even modest admixture produces large fold changes.
+
+A systematic literature scan (protocol in Supplementary Table S7) of BCBM bulk transcriptomic studies reporting neural/glial gene up-regulation finds that the majority do not report tumour purity or apply deconvolution before interpreting neural genes as tumour-cell programmes.
+
+Standard purity-aware approaches are helpful but insufficient here. Global deconvolution returns a single composition estimate per sample and does not tell the investigator which genes are affected. Moreover, deconvolution and the gene sets being tested often draw on the same marker genes, making the resulting association partly circular.
+
+We therefore took a different approach. Working entirely within brain-metastasis samples, we asked, gene by gene, whether expression tracks the estimated brain-cell content across samples. A gene whose apparent up-regulation reflects admixture should be high precisely in those specimens that contain more brain; a gene expressed by tumour cells should not. This per-gene design is independent of the absolute deconvolution scale, is immune to the platform-capture biases that affect single-nucleus references, and yields an actionable verdict for every gene.
+
+---
+
+## 2. Methods
+
+### 2.1 Datasets
+
+| Dataset | Role | Composition |
+|---|---|---|
+| GSE184869 | Discovery; paired primary-BCBM bulk | 69 brain metastases, 21 primaries, 21 true pairs; 16,714 genes |
+| GSE324453 | Single-nucleus BCBM reference | 56,268 nuclei, 12 annotated cell types, 21 patients |
+| GSE176078 | Breast single-cell reference | 100,064 cells, 26 patients, 9 major cell types |
+| GSE125989 | Replication | 16 brain metastases (GPL571) |
+| GSE14017 | Replication | 15 brain metastases (GPL570) |
+| GSE14018 | Replication (excluded) | 7 brain metastases; underpowered |
+| GSE43837 | Excluded | Custom array, unannotated |
+| GSE2603 | BMFS | n = 82 (14 events) |
+| GSE12276 | BMFS (site-of-relapse) | n = 196; 15 brain events; no OS event field |
+| TCGA-BRCA | Deconvolution floor | 50 primaries, recount3 STAR counts |
+
+GSE184869 brain metastases derive from three sample groups (15 named BM/BP pairs, 6 M_RCS/P_RCS pairs, 48 MAYO metastases); batch was retained as a covariate.
+
+### 2.2 Differential expression
+
+Paired analysis used the 21 true primary-metastasis pairs, with per-gene paired t-tests and Benjamini-Hochberg correction. Genes were called differentially expressed at FDR < 0.05 and |log2FC| > 0.3, yielding 2,187 up-regulated and 2,216 down-regulated genes.
+
+Gene-count bookkeeping: 2,187 up-regulated; 1,254 retained for per-gene correlation; 1,214 in simulation space; 203 de novo adaptation; final verdicts: 120 contamination-driven, 973 tumour-intrinsic, 161 indeterminate.
+
+### 2.3 Temporal decomposition
+
+Up-regulated genes were partitioned by baseline expression into de novo adaptation (low baseline), competence (high baseline) and intermediate. Threshold sensitivity assessed across log2FC 0.5-1.0 and baseline quantiles Q20-Q33; de novo set ranged 141-501 genes. Regression to the mean: baseline vs |log2FC| r = -0.087. Within-patient label permutation (200 iterations): null 29 vs observed 282 (p ~ 0.005).
+
+### 2.4 Deconvolution
+
+BayesPrism (v2.2.3) with merged reference (GSE324453 + GSE176078), harmonised labels. Each class down-sampled to 250 cells. chain.length = 150, burn.in = 50, thinning = 2, update.gibbs = TRUE. R 4.6.0, Seurat 5.5.1.
+
+Input-type limitation: GSE184869 is batch-corrected log2 TMM CPM (no raw counts). BayesPrism assumes count model; absolute estimates not quantitatively interpretable, reported in Supplementary only. All primary inferences use rank correlation. TCGA floor (raw counts) not directly comparable, descriptive only.
+
+Brain-cell content = neuron + astrocyte + oligodendrocyte fractions; reported per class. Neuron-only definition used as robustness check.
+
+### 2.5 Per-gene contamination verdict (primary)
+
+Spearman correlation between expression and brain-cell content across BM samples only (n = 69), BCa bootstrap CI (2,000), BH-FDR. Classification: contamination-driven (rho > 0.6, FDR < 0.05), tumour-intrinsic (|rho| < 0.3), indeterminate. Threshold sensitivity at 0.5/0.4 and 0.7/0.2.
+
+### 2.6 Robustness
+
+Batch: within-MAYO (n=48) and partial correlation adjusting for batch. Kruskal-Wallis for between-batch differences.
+
+Astrocyte class: (i) expression-profile similarity; (ii) rebalance to 441 nuclei; (iii) remove astrocyte class; (iv) redefine as neuron+ODG; (v) neuron-only. Cohen's kappa and gene-wise rho correlation.
+
+Marker circularity: data-driven markers (Wilcoxon, log2FC > 1, FDR < 0.01, detection > 0.25). Stepwise removal 0/25/50/100/150. Negative control: 1,000 expression-matched random gene sets (n=85) from tumour-intrinsic candidates.
+
+Baseline: per-gene rho vs baseline expression. Baseline-matched comparison of contamination-driven vs tumour-intrinsic.
+
+### 2.7 In silico mixing (supporting)
+
+Pseudobulk from snRNA reference, tumour composition identical between arms. 3,000 cells/pseudobulk, donor-stratified. Brain substitution f = 0-0.5 (12 values), 20 replicates x 45 pairs. Internal brain composition: neuron 52.3%, ODG 31.0%, astro 17.3%. Paired t-tests, BH-FDR. Global fit (RMSE, Deming) uninformative; only per-gene back-solved f reported.
+
+### 2.8 Replication and meta-analysis
+
+Within-BM-sample correlations in each cohort, brain-marker ssGSEA proxy for microarray. Fixed-effect Fisher z. GSE14018 (n=7) excluded. GSE43837 unmappable.
+
+### 2.9 Survival analysis
+
+Cox per SD. GSE2603: bm event field (0/1), 22 cell-line samples excluded, 82 patients (14 events). GSE12276: site-of-relapse BMFS (brain/brain+other = event), 196 patients (15 events). Proliferation adjustment (MKI67/TOP2A/PCNA/CCNB1). Bootstrap CI (1,000), DFBETA. 500 random gene sets with correct event coding. GSE12276 no OS death event; previous event=1 withdrawn. Cohorts analysed separately, not pooled.
+
+### 2.10 Availability
+
+Code at [GitHub/Zenodo - to assign]. Per-gene verdict table as Supplementary Table S2.
+
+---
+
+## 3. Results
+
+### 3.1 Most up-regulated genes are normal brain transcripts
+
+Paired analysis: 2,187 up, 2,216 down. Leading up: C1QL1, ATP1A2, TUBB4A, CHGB, ZIC2, PAX6, MAG, APLP1 - canonical neuron/astrocyte/ODG markers. Down: MMP2, COL12A1, AEBP1 - breast stromal. Compatible with both hypotheses, cannot distinguish.
+
+![Figure 2](figures/Figure2_volcano.png)
+
+**Figure 2.** Paired DE (n=21 pairs). Volcano coloured by contamination verdict.
+
+### 3.2 Per-gene analysis separates contamination from tumour-intrinsic
+
+Brain-cell content range 0.10-0.32 across 69 BM. Of 1,254 genes: 120 contamination-driven, 973 tumour-intrinsic, 161 indeterminate.
+
+Contamination-driven: DEPTOR (0.84), TRIM9 (0.79), GNAO1 (0.76), SCG3 (0.76), ATP1A2 (0.75), TUBB4A (0.74), MAG (0.60).
+
+Threshold robust: at 0.7/0.2: 44/739; at 0.5/0.4: 168/1046.
+
+![Figure 3](figures/Figure3_per_gene_verdict.png)
+
+**Figure 3.** (a) log2FC vs rho, three-class verdict. (b) Competence gene rho density vs all genes. (c) Competence overlap: 956/92/2.
+
+### 3.3 C1QL1: highest logFC, most contaminated
+
+C1QL1 log2FC = 5.15, undetectable in primary. Per-gene test: rho = 0.716 (CI 0.55-0.82, FDR = 6e-9). Contamination.
+
+Simulation underestimates: 50% admixture reproduces only log2FC ~0.9 (6x underestimate) due to snRNA poor capture of secreted synaptic transcripts. This is why per-gene correlation is primary method.
+
+### 3.4 Not explained by batch, reference composition, or marker circularity
+
+Batch: between-group difference (KW p=0.015) but within-MAYO rho=0.845 (n=48), partial rho=0.885.
+
+Astrocyte: no misassignment of breast stroma (CAF 0.68, PVL 0.66). Highest non-self similarity to Stroma (0.89) - but Stroma is from BCBM snRNA (brain-resident), not breast reference. Rebalance to 441: astro estimate rises (0.099->0.102). Remove astro: delta intact (0.027). Redefine neuron+ODG: kappa=0.754, rho corr=0.953.
+
+Neuron-only: only neuron distinguishes BM vs primary (mean 0.030 vs 0.016, 1.8x; median 0.023 vs 0.015, 1.5x). ODG nearly identical (1.1x), astro 1.2x. Neuron-only adaptation rho=0.765; kappa=0.700; ATP1A2 0.69, TUBB4A 0.71 remain contamination-driven; competence genes near 0.
+
+Marker circularity: stepwise removal 0.900->0.808 (150 markers). Expression-matched null: median 0.129 (CI 0.048-0.217), observed 0.808 extreme (p=0.001).
+
+![Figure 4](figures/Figure4_robustness.png)
+
+**Figure 4.** (a) Batch. (b) Brain content by class (mean ratios). (c) Neuron-only rho comparison. (d) Marker removal + null.
+
+### 3.5 Replication across independent cohorts
+
+Within-BM only: GSE125989 n=16 rho=0.882; GSE14017 n=15 rho=0.868; discovery n=69 rho=0.93 (CI [0.89,0.96]). Pooled FE rho=0.918 (CI 0.879-0.945), n=100. GSE14018 underpowered.
+
+![Figure 5](figures/Figure5_forest.png)
+
+**Figure 5.** Forest plot, within-BM correlations, Fisher-z CI, pooled rho=0.918.
+
+### 3.6 Paired within-patient comparison
+
+21 true pairs: BM > primary in 20/21 (Wilcoxon p=4.8e-6). Delta range 0.03-0.06 across reference configs.
+
+### 3.7 "De novo acquired" genes structurally enriched for contamination
+
+rho vs baseline: r=-0.447 (p=1e-62). Baseline bimodal (gap 2-3.5 log2CPM from expression filter). Lowest quintile median rho=0.59 vs -0.05 to -0.10 upper quintiles (p<1e-30). Low primary expression = brain-restricted = de novo category by construction.
+
+Not purely baseline: after matching, contamination-driven rho=0.679 vs tumour-intrinsic 0.197 (p=2e-41).
+
+![Figure 6](figures/Figure6_baseline.png)
+
+**Figure 6.** (a) rho vs baseline, quintile means. (b) Baseline-matched comparison. (c) Per-gene f from mixing.
+
+### 3.8 Competence programme: clean for contamination, but not predictive
+
+1,050 competence genes: 956 tumour-intrinsic, 92 indeterminate, 2 contamination-driven (SEPTIN4 rho=0.63 logFC=0.50; S100A6 rho=0.60 logFC=0.42). Core genes all independent: ABCG2 0.11, GRB7 0.13, SCD 0.08, SPHK1 0.12, CRYAB 0.24.
+
+Partly definitional (breast-expressed excludes brain-restricted). Read as internal negative control: analysis doesn't indiscriminately assign contamination. But contamination-independence != clinical validity: Section 3.10 shows failure to predict BMFS.
+
+### 3.9 Tumour cells express neural genes weakly
+
+snRNA: tumour adaptation score 0.193 vs random null 0.111 (p<0.002). Lung/liver markers near 0 (0.011/0.008). But neurons 0.353, astrocytes 0.283. Genuine but small tumour-intrinsic component; bulk overstates substantially.
+
+### 3.10 Competence fails to predict in expected direction
+
+Two independent BMFS cohorts.
+
+GSE2603: correct bm event, 82 patients (14 events). HR=0.47/SD (p=0.005; bootstrap CI 0.26-0.80), adjusted HR=0.42 (p=0.006). Direction opposite to hypothesis.
+
+Technical confounding check: score higher in ER-negative (0.28 vs -0.22), but ER-negative is higher risk -> if proxying ER, HR should be positive. GRB7/HER2 also higher risk -> works against negative association. DFBETA: 3 high-leverage points (GSM50075 censored -2.26; GSM50112 event 1.18yr +0.91; GSM50066 event 1.24yr -2.56), but LOO estimates stay <1.
+
+500 random gene sets (correct coding): null median HR=0.83, 99% have HR<1. Protective direction is dataset-level small-sample property, not competence-specific. Observed 0.47 more extreme than null (p<0.001).
+
+GSE12276: site-of-relapse BMFS, 196 patients (15 events). HR=1.24/SD (p=0.38) - expected positive direction but nonsignificant. Two cohorts opposite directions. Previous OS event=1 withdrawn.
+
+Conclusion: no validated CNS surveillance stratification. Temporal-decomposition framework fails on both adaptation (contamination) and competence (prediction) arms.
+
+### 3.11 Supporting simulation
+
+Per-gene back-solved f median 0.115 (IQR 0.05-0.20). Global fit uninformative. Supporting only, given C1QL1 capture bias.
+
+---
+
+## 4. Discussion
+
+Central result: neural-like signal tracks normal brain content. Holds across 3 cohorts (pooled rho=0.918), within batch, after astrocyte removal, neuron-only redefinition, marker removal.
+
+Study design mechanism: de novo programmes defined by low primary expression select brain-restricted transcripts. r=-0.447 gradient. Explains why inference reproduced consistently.
+
+C1QL1: highest logFC, most contaminated. Simulation underestimates 6x due to snRNA capture bias. Reference-dependent corrections biased toward retaining contaminated genes.
+
+Practical: ATP1A2/C1QL1 are markers of adjacent brain, not tumour targets. Purity-aware analysis determines which genes are real.
+
+Tumour cells have weak genuine neural expression (0.193 > null 0.111), but bulk magnitude not attributable to tumour cells.
+
+Competence failure extends conclusion: clean for contamination but fails prediction. Framework as a whole doesn't yield actionable classes from bulk.
+
+### 4.1 Limitations
+
+1. GSE184869 log-CPM input; absolute deconvolution not interpretable; rank correlation primary.
+2. 161 genes indeterminate.
+3. snRNA under-represents cytoplasmic transcripts.
+4. No spatial transcriptomics for direct confirmation.
+5. Platform-dependent contamination proxy (deconvolution vs marker score).
+6. Survival: GSE2603 14 events (EPV=7 < 10), null shifted below 1; GSE12276 15 events, no OS field; opposite directions between cohorts.
+
+### 4.2 Recommendations
+
+The findings above point to a set of practical changes in how bulk BCBM transcriptomic studies should be designed and interpreted. The first and simplest is that every bulk analysis of brain metastasis should report an explicit estimate of tumour purity or, at minimum, brain-cell content. Without this number, it is impossible for readers to judge whether an observed neural signature reflects tumour biology or the amount of adjacent parenchyma in the specimen.
+
+Beyond reporting purity, the way programmes are defined matters. Any gene set constructed around low expression in the primary tumour should be treated as suspect until it has been directly tested against contamination, because that definition structurally enriches for transcripts that are absent from breast tissue and therefore most likely to come from admixed brain. When contamination testing is performed, it should be done gene by gene rather than sample by sample: a sample-level purity estimate tells you how much brain is present, but not which genes are driven by it, and the two questions have very different implications for target selection.
+
+Reference-based correction methods, including deconvolution and in silico mixing, are useful but carry their own blind spot. As the C1QL1 case shows, single-nucleus references systematically under-represent cytoplasmic and secreted transcripts, so corrections built on such references will tend to retain genuinely contaminated genes as tumour-intrinsic. These methods should therefore be validated against a reference-independent approach — per-gene correlation with a contamination proxy is one such approach — before their outputs are used to rank candidates.
+
+Finally, two cautions follow directly from the data. Bulk fold-change rankings should not be used to nominate therapeutic targets in this setting, because the genes at the top of such rankings are precisely those most likely to be markers of adjacent normal brain rather than tumour. And any candidate prognostic signature derived from temporal-decomposition classes should be benchmarked against expression-matched random gene sets before it is proposed as a clinical stratifier, since small-event datasets can produce apparently significant associations for gene sets of any composition.
+
+---
+
+## 5. Conclusions
+
+Neural-like signal in bulk BCBM is largely explained by adjacent normal brain. Low-primary-expression programme definitions are structurally vulnerable. Competence is clean for contamination but fails prediction. Per-gene verdict table (1,254 genes) provided as resource.
+
+---
+
+## Figure legends
+
+**Figure 1.** Study design: contamination vs reprogramming, per-gene test.
+
+![Figure 1](figures/Figure1_study_design.png)
+
+**Figure 2.** Paired DE volcano (n=21 pairs).
+
+**Figure 3.** Per-gene verdict: (a) log2FC-rho scatter, (b) competence density, (c) competence overlap.
+
+**Figure 4.** Robustness: (a) batch, (b) brain content by class, (c) neuron-only rho, (d) marker removal+null.
+
+**Figure 5.** Forest plot: 3 cohorts + pooled, within-BM correlations.
+
+**Figure 6.** Baseline: (a) rho vs baseline quintiles, (b) matched comparison, (c) mixing f.
+
+---
+
+## Supplementary
+
+**Table S1.** Sample inventory. (`supplementary/TableS1_sample_inventory.csv`)
+
+**Table S2.** Per-gene contamination verdict (1,254 genes). Primary resource. (`supplementary/TableS2_gene_contamination_verdict.csv`)
+
+**Table S3.** Absolute deconvolution estimates (input limitation noted). (`supplementary/TableS3_deconvolution_absolute.csv`)
+
+**Table S4.** Threshold sensitivity. (`supplementary/TableS4_threshold_sensitivity.csv`)
+
+**Table S5.** Simulation global fit (inapplicability noted). (`supplementary/TableS5_simulation_global_fit.csv`)
+
+**Table S6.** Survival: GSE2603 BMFS (HR=0.47, bootstrap CI [0.26,0.80], null median 0.83); GSE12276 BMFS (HR=1.24, p=0.38); DFBETA. (`supplementary/TableS6_survival.csv`)
+
+**Table S7.** Literature scan protocol. (`supplementary/TableS7_literature_scan_protocol.csv`)
+
+**Figure S1.** Reference profile similarity heatmap.
+
+![Figure S1](figures/FigureS1_similarity.png)
+
+**Figure S2.** Deconvolution comparison (rebalanced/astro-removed).
+
+![Figure S2](figures/FigureS2_deconv_comparison.png)
+
+**Figure S3.** TCGA-BRCA deconvolution floor (descriptive).
+
+![Figure S3](figures/FigureS3_tcga_floor.png)

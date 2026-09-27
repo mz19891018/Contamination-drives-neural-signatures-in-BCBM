@@ -1,0 +1,5 @@
+suppressPackageStartupMessages(library(Seurat))
+seu <- readRDS("D:/BCBM_Project/data/raw/GSE324453_seurat.rds")
+print(colnames(seu@meta.data))
+cat("\n--- first few metadata ---\n")
+print(head(seu@meta.data[,1:min(8,ncol(seu@meta.data))]))

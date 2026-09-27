@@ -1,0 +1,5 @@
+cat(paste("R", R.version$major, R.version$minor, "\n"))
+cat(paste("BayesPrism", as.character(packageVersion("BayesPrism")), "\n"))
+cat(paste("Seurat", as.character(packageVersion("Seurat")), "\n"))
+cat(paste("recount3", as.character(packageVersion("recount3")), "\n"))
+cat(paste("Matrix", as.character(packageVersion("Matrix")), "\n"))

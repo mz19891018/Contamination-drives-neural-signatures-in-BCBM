@@ -1,0 +1,6 @@
+library(BayesPrism)
+cat("slots:\n"); print(slotNames("BayesPrism"))
+cat("\nargs of new/init:\n")
+print(args(BayesPrism:::.init))
+cat("\n?new example arg names from classMethods:\n")
+print(methods:::showMethods("initialize", classes="BayesPrism"))
